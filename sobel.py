@@ -38,12 +38,15 @@ def gaussian_blur(matrix):
                     pos = gauss[2+k, 2+l]
                     total += (pos * val)
             matrix[i][j] = total
+def main():
+    original_image = Image.open("samples/blocks_color.jpg")
+    pixel_matrix = convert_to_grayscale(original_image)
+    gaussian_blur(pixel_matrix)
+    im = Image.fromarray(numpy.uint8(pixel_matrix * 255),'L')
+    im.show()
+    original_image.show()
+    im.close()
+    original_image.close()
 
-original_image = Image.open("samples/blocks_color.jpg")
-pixel_matrix = convert_to_grayscale(original_image)
-gaussian_blur(pixel_matrix)
-im = Image.fromarray(numpy.uint8(pixel_matrix * 255),'L')
-im.show()
-original_image.show()
-im.close()
-original_image.close()
+if __name__ == '__main__':
+    main()
