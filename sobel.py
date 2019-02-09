@@ -60,16 +60,24 @@ def sobel_filter(matrix):
     
     return resultant
 
-def main():
-    original_image = Image.open("samples/blocks_color.jpg")
-    pixel_matrix = convert_to_grayscale(original_image)
-    gauss_filter(pixel_matrix)
-    pixel_matrix = sobel_filter(pixel_matrix)
+def save_image(filename, pixel_matrix):
     im = Image.fromarray(numpy.uint8(pixel_matrix * 255),'L')
-    im.show()
-    original_image.show()
-    im.close()
-    original_image.close()
+    im.save(filename)
+
+def main():
+    print("Working...")
+    original_image = Image.open("samples/blocks_color.jpg")
+    original_image.save("result/original.jpg")
+    pixel_matrix = convert_to_grayscale(original_image)
+    save_image("result/grey.jpg", pixel_matrix)
+    print("Converted to GrayScale")
+    gauss_filter(pixel_matrix)
+    save_image("result/gauss.jpg", pixel_matrix)
+    print("Applied Gaussian Blur")
+    pixel_matrix = sobel_filter(pixel_matrix)
+    save_image("result/sobel.jpg", pixel_matrix)
+    print("Applied the Sobel Operator")
+    print("Done")
 
 if __name__ == '__main__':
     main()
