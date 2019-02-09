@@ -2,6 +2,7 @@
 
 from PIL import Image
 import numpy
+import math
 
 def gamma_correction(c_linear):
     c_srgb = 12.92 * c_linear 
@@ -20,9 +21,9 @@ def convert_to_grayscale(image):
             matrix[y,x] = gamma_correction(c_linear)
     return matrix
 
-def gaussian_blur(matrix):
-    gauss = (1.0/57) * numpy.array(
-        [[0, 1, 2, 1, 0],
+def gauss_filter(matrix):
+    gauss = (1.0/57) * numpy.array([
+        [0, 1, 2, 1, 0],
         [1, 3, 5, 3, 1],
         [2, 5, 9, 5, 2],
         [1, 3, 5, 3, 1],
@@ -38,10 +39,32 @@ def gaussian_blur(matrix):
                     pos = gauss[2+k, 2+l]
                     total += (pos * val)
             matrix[i][j] = total
+
+def sobel_filter(matrix):
+    xgradient = numpy.array([[-1, 0, 1], [-2, 0, 2],[-1, 0, 1]])
+    ygradient = numpy.array([[-1, -2, -1], [0, 0, 0],[1, 2, 1]])
+
+    height, width = matrix.shape
+    resultant = numpy.empty((height,width),numpy.float64)
+    
+    for i in numpy.arange(1, height - 2):
+        for j in numpy.arange(1, width - 2):
+            xfactor = xgradient[0][0] * matrix[i-1][j-1] + xgradient[0][1] * matrix[i][j-1] + xgradient[0][2] * matrix[i+1][j-1] + \
+                      xgradient[1][0] * matrix[i-1][j] + xgradient[1][1] * matrix[i][j] + xgradient[1][2] * matrix[i+1][j] + \
+                      xgradient[2][0] * matrix[i-1][j+1] + xgradient[2][1] * matrix[i][j+1] + xgradient[2][2] * matrix[i+1][j+1]
+            yfactor = ygradient[0][0] * matrix[i-1][j-1] + ygradient[0][1] * matrix[i][j-1] + ygradient[0][2] * matrix[i+1][j-1] + \
+                      ygradient[1][0] * matrix[i-1][j] + ygradient[1][1] * matrix[i][j] + ygradient[1][2] * matrix[i+1][j] + \
+                      ygradient[2][0] * matrix[i-1][j+1] + ygradient[2][1] * matrix[i][j+1] + ygradient[2][2] * matrix[i+1][j+1]
+            val = math.sqrt(xfactor * xfactor + yfactor * yfactor)
+            resultant[i,j] = val
+    
+    return resultant
+
 def main():
     original_image = Image.open("samples/blocks_color.jpg")
     pixel_matrix = convert_to_grayscale(original_image)
-    gaussian_blur(pixel_matrix)
+    gauss_filter(pixel_matrix)
+    pixel_matrix = sobel_filter(pixel_matrix)
     im = Image.fromarray(numpy.uint8(pixel_matrix * 255),'L')
     im.show()
     original_image.show()
