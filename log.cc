@@ -3,6 +3,7 @@
 #include<cmath>
 #include<png++/png.hpp>
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> mat;
 constexpr double pi() { return std::atan(1)*4; }
@@ -68,7 +69,6 @@ mat apply_log(mat image, mat log_matrix){
     long cols= image.cols();
     long lfactor= log_matrix.rows();
     int mid = (lfactor-1)/2;
-    std::cout << mid << std::endl;
     for(int i=mid;i<rows-mid;i++){
         for(int j=mid;j<cols-mid;j++){
             double total = 0.0;
@@ -84,6 +84,30 @@ mat apply_log(mat image, mat log_matrix){
     return result;
 }
 
+mat apply_sobel(mat image){
+    static const Eigen::Matrix3d horizontalFilterMatrix = (Eigen::Matrix3d() << -3,  0, 3,
+                                                              -10, 0, 10,
+                                                              -3,  0, 3).finished();
+
+static const Eigen::Matrix3d verticalFilterMatrix   = horizontalFilterMatrix.transpose();
+    mat result(image.rows(),image.cols());
+    long rows= image.rows();
+    long cols= image.cols();
+    for(int i=1;i<rows-1;i++){
+        for(int j=1;j<cols-1;j++){
+            int a=0, b=0;
+            for(int k=-1;k<=1;k++){
+                for(int l=-1;l<=1;l++){
+                    a += image(i+k,j+l) * horizontalFilterMatrix(k+1,l+1);
+                    b += image(i+k,j+l) * verticalFilterMatrix(k+1,l+1);
+                }
+            }
+            result(i,j) = std::pow(a*a + b*b, 0.5);
+        }
+    }
+
+    return result;
+}
 double gamma_correction(double c_linear){
     double c_srgb = 12.92 * c_linear;
     if (c_linear > 0.0031308){
@@ -120,9 +144,11 @@ void save_image(const std::string &fname, const mat &matrix){
 }
 
 int main(){
-    png::image<png::rgb_pixel> image("./samples/blocks_color.png");
+    png::image<png::rgb_pixel> image("./samples/samplei.png");
     auto pixels = convert_to_grayscale(image);
-    pixels = apply_log(pixels,createLoGMatrix(2,-1));
-    save_image("./result/log_applied.png",pixels); 
+    auto pixels_log = apply_log(pixels,createLoGMatrix(2,-1));
+    save_image("./result/log_applied.png",pixels_log); 
+    auto pixels_sobel = apply_sobel(pixels);
+    save_image("./result/sobel_applied.png", pixels_sobel);
     return 0;
 }
