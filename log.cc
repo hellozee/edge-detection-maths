@@ -63,16 +63,17 @@ mat createLoGMatrix(double radius, double coeff)
 }
 
 mat apply_log(mat image, mat log_matrix){
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> result(image.rows(),image.cols());
+    mat result(image.rows(),image.cols());
     long rows= image.rows();
     long cols= image.cols();
     long lfactor= log_matrix.rows();
     int mid = (lfactor-1)/2;
+    std::cout << mid << std::endl;
     for(int i=mid;i<rows-mid;i++){
         for(int j=mid;j<cols-mid;j++){
             double total = 0.0;
-            for(int k=-1*mid;k<mid;k++){
-                for(int l=-1*mid;l<mid;l++){
+            for(int k=-1*mid;k<=mid;k++){
+                for(int l=-1*mid;l<=mid;l++){
                     total += image(i+k,j+l) * log_matrix(mid+k,mid+l);
                 }
             }
@@ -121,7 +122,7 @@ void save_image(const std::string &fname, const mat &matrix){
 int main(){
     png::image<png::rgb_pixel> image("./samples/blocks_color.png");
     auto pixels = convert_to_grayscale(image);
-    pixels = apply_log(pixels,createLoGMatrix(1.4,-1));
+    pixels = apply_log(pixels,createLoGMatrix(2,-1));
     save_image("./result/log_applied.png",pixels); 
     return 0;
 }
